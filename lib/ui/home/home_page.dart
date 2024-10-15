@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:zikr_loop/ui/theme/theme.dart';
+import 'package:provider/provider.dart';
+import 'package:zikr_loop/ui/viewmodel/azkar_viewmodel.dart';
 
 import '../routes/routes.dart';
 import '../widgets/zikrButton.dart';
@@ -26,6 +27,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final AzkarViewModel azkarViewModel = Provider.of<AzkarViewModel>(context);
     //NavigationService service = NavigationService();
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -41,7 +43,10 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title, style: GoogleFonts.fasterOne(),),
+        title: Text(
+          widget.title,
+          style: GoogleFonts.fasterOne(),
+        ),
         actions: [
           IconButton(
               onPressed: () {
@@ -82,60 +87,62 @@ class _HomePageState extends State<HomePage> {
             flex: 2,
             child: Padding(
               padding: const EdgeInsets.all(32.0),
-              child: Column(
-                children: [
-                  Text(
-                    "لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَِِِ",
-                    textAlign: TextAlign.center,
-                    selectionColor: Colors.white,
-                    style: Theme.of(context).textTheme.displayMedium,// Align the text to center
-                  ),
-                  SizedBox(
-                    height: 32.0,
-                  ),
-                  Text(
-                    "There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers.",
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  )
-                ],
-              ),
+              child: azkarViewModel.activeZikr == null
+                  ? MaterialButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, Routes.zikrList.name);
+                      },
+                      child: Text("Select Zikr"),
+                    )
+                  : Column(
+                      children: [
+                        Text(
+                          azkarViewModel.activeZikr!.azkar,
+                          textAlign: TextAlign.center,
+                          selectionColor: Colors.white,
+                          style: Theme.of(context)
+                              .textTheme
+                              .displaySmall, // Align the text to center
+                        ),
+                        SizedBox(
+                          height: 32.0,
+                        ),
+                        Text(
+                          azkarViewModel.activeZikr!.translation,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        )
+                      ],
+                    ),
             ),
           ),
           Expanded(
               flex: 1,
-              child: Container(
-                margin: EdgeInsets.all(16.0),
-                // Set the margin around the container
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest, // Background color
-                  borderRadius: BorderRadius.circular(32.0), // Rounded corners
-                ),
-                width: double.infinity,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Spacer(
-                      flex: 1,
-                    ),
-                    ZikrButton(
-                      onZikrCompleted: () {
-                        _incrementCounter();
-                      },
-                      zikrDuration: 8,
-                    ),
-                    Spacer(
-                      flex: 1,
-                    ),
-                    Text("$_counter", style: GoogleFonts.rubikGlitch(fontSize: 20.0),),
-                    Spacer(
-                      flex: 1,
-                    )
-                  ],
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Spacer(
+                    flex: 1,
+                  ),
+                  ZikrButton(
+                    onZikrCompleted: () {
+                      _incrementCounter();
+                    },
+                    zikrDuration: azkarViewModel.activeZikr?.duration ?? 0,
+                  ),
+                  Spacer(
+                    flex: 1,
+                  ),
+                  Text(
+                    "$_counter",
+                    style: GoogleFonts.rubikGlitch(fontSize: 20.0),
+                    textAlign: TextAlign.center,
+                  ),
+                  Spacer(
+                    flex: 1,
+                  )
+                ],
               )),
         ],
       ), // This trailing comma makes auto-formatting nicer for build methods.

@@ -4,20 +4,26 @@ import 'package:flutter_svg/svg.dart';
 class ZikrButton extends StatefulWidget {
   final VoidCallback onZikrCompleted;
   final int zikrDuration;
-  const ZikrButton({super.key, required this.onZikrCompleted, required this.zikrDuration});
+
+  const ZikrButton(
+      {super.key, required this.onZikrCompleted, required this.zikrDuration});
 
   @override
   _ZikrButtonState createState() => _ZikrButtonState();
 }
 
-class _ZikrButtonState extends State<ZikrButton>
-    with SingleTickerProviderStateMixin {
+class _ZikrButtonState extends State<ZikrButton> with TickerProviderStateMixin {
   double progressValue = 0.0;
   late AnimationController _controller;
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
+    _scaleController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 100));
+
     _controller = AnimationController(
       vsync: this,
       duration: Duration(seconds: widget.zikrDuration),
@@ -32,6 +38,13 @@ class _ZikrButtonState extends State<ZikrButton>
           resetProgress();
         }
       });
+
+    // Initialize scale animation
+    _scaleAnimation =
+        Tween<double>(begin: 1.0, end: 0.8).animate(CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.easeIn,
+    ));
   }
 
   void resetProgress() {
@@ -60,26 +73,37 @@ class _ZikrButtonState extends State<ZikrButton>
         ),
 
         // Button
-        GestureDetector(
-          onTap: () {
-            _controller.forward();
-          },
-          child: Container(
-            width: 110,
-            height: 110,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.limeAccent, // Green inner circle
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                'assets/icons/logo.svg', // Replace with your SVG path
-                width: 24.0, // Desired width
-                height: 24.0, // Desired height
-                colorFilter: ColorFilter.mode(
-                  Colors.black, // Color to apply
-                  BlendMode.srcIn, // Blend mode to use
+        ScaleTransition(
+          scale: _scaleAnimation,
+          child: GestureDetector(
+            onTapDown: (details) {
+              _scaleController.forward();
+            },
+            onTapUp: (_) {
+              _scaleController.reverse(); // Reverse scaling when released
+              _controller.forward(); // Start the timer when released
+            },
+            onTapCancel: () {
+              _scaleController
+                  .reverse(); // Reverse scaling when tap is canceled
+            },
+            child: Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.limeAccent, // Green inner circle
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icons/logo.svg', // Replace with your SVG path
+                  width: 24.0, // Desired width
+                  height: 24.0, // Desired height
+                  colorFilter: ColorFilter.mode(
+                    Colors.black, // Color to apply
+                    BlendMode.srcIn, // Blend mode to use
+                  ),
                 ),
               ),
             ),
